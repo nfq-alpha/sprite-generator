@@ -1,0 +1,21 @@
+{
+    "name": "nfq-alpha/sprite-bundle",
+    "description": "Generate sprite with basic PHP",
+    "keywords": ["sprite"],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kazimieras Butkus",
+            "email": "kazimieras@nfq.lt"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "require-dev": {
+    },
+    "autoload": {   
+        "psr-0": { "SpriteGenerator": "src/" }
+    }
+}

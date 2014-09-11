@@ -1,0 +1,6 @@
+parameters:
+    sprite.class: SpriteGenerator\Services\SpriteService
+
+services:
+    nfq.sprite:
+        class: %sprite.class%
