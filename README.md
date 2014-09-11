@@ -45,6 +45,7 @@ sprite_generator:
             relativeImagePath: ../bundles/img/
             padding: 5
             spriteClass: sprite
+            cssFormat: sass
         another_spritename:
             inDir: %kernel.root_dir%/../src/Resources/public/img/sprites/
             outImage: %kernel.root_dir%/../src/Resources/public/img/sprite2.png
@@ -52,6 +53,7 @@ sprite_generator:
             relativeImagePath: ../bundles/img/
             padding: 5
             spriteClass: sprite_another
+            cssFormat: sass
 ```
 
 ## Generate sprites

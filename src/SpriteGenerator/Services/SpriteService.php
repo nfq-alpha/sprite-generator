@@ -3,6 +3,7 @@
 namespace SpriteGenerator\Services;
 
 use SpriteGenerator\Exception\SpriteException;
+use SpriteGenerator\Formatter\SassFormatter;
 
 
 /**
@@ -99,12 +100,8 @@ class SpriteService
                 throw new SpriteException('Image source directory doesn\'t exist');
             }
 
-            try {
-                $this->setActiveSprite($spriteName);
-                $this->create();
-            } catch (SpriteException $de) {
-                throw new SpriteException('Sprite "' . $spriteName . '" cannot be generated.');
-            }
+            $this->setActiveSprite($spriteName);
+            $this->create();
         }
 
         return true;
@@ -258,46 +255,28 @@ class SpriteService
     /**
      * @param $images
      * @return bool
-     * @TODO: file formatter done with twig configurable with config
      */
     public function createSpriteCss($images)
     {
+        $spriteClass = $this->getConfigParam('spriteClass');
+
         $imageHash = substr(md5(serialize($images)), 10, 20);
 
-        $imageName = $this->getConfigParam('relativeImagePath');
-        $imageName .= basename($this->getConfigParam('outImage'));
+        $spriteImageName = $this->getConfigParam('relativeImagePath');
+        $spriteImageName .= basename($this->getConfigParam('outImage'));
+        $spriteImageName .= '?' . $imageHash;
 
-        $css = '';
-        $this->addCssLine($css, ".{$this->getConfigParam('spriteClass')} {");
-        $this->addCssLine($css, "\tbackground: url({$imageName}?{$imageHash}) no-repeat;");
-        $this->addCssLine($css, "}");
-        $this->addCssLine($css, "");
-
-        foreach ($images as $key => $image) {
-            $this->addCssLine($css, ".{$key} {");
-
-            $this->addCssLine($css, "\twidth: {$image['width']}px;");
-            $this->addCssLine($css, "\theight: {$image['height']}px;");
-
-            $this->addCssLine($css, "\tbackground-position: -{$image['pos_x']}px -{$image['pos_y']}px;");
-            $this->addCssLine($css, "}");
-
-            $this->addCssLine($css, "");
+        switch($this->getConfigParam('cssFormat')) {
+            case 'sass':
+                $formatter = new SassFormatter();
+                break;
         }
+        $formattedCss = $formatter->format($images, $spriteClass, $spriteImageName);
 
         // TODO: check if saving worked
-        file_put_contents($this->getConfigParam('outCss'), $css);
+        file_put_contents($this->getConfigParam('outCss'), $formattedCss);
 
         return true;
-    }
-
-    /**
-     * @param $wholeCss string
-     * @param $addCss string
-     */
-    public function addCssLine(&$wholeCss, $addCss)
-    {
-        $wholeCss = $wholeCss . "$addCss\r\n";
     }
 }
 

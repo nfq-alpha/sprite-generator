@@ -17,6 +17,8 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
+        // TODO: check getConfigTreeBuilder works and fix it - it's not executed now...
+
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('sprite_generator');
 
@@ -32,6 +34,9 @@ class Configuration implements ConfigurationInterface
                             ->scalarNode('relativeImagePath')->end()
                             ->scalarNode('padding')->end()
                             ->scalarNode('spriteClass')->end()
+                            ->scalarNode('cssFormat')
+                                ->defaultValue('sass')
+                            ->end()
                         ->end()
                     ->end()
                 ->end()
