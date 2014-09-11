@@ -4,6 +4,7 @@ namespace SpriteGenerator\Services;
 
 use SpriteGenerator\Exception\SpriteException;
 use SpriteGenerator\Formatter\SassFormatter;
+use SpriteGenerator\Positioner\OneColumnPositioner;
 
 
 /**
@@ -148,66 +149,25 @@ class SpriteService
      */
     public function createSpriteImage(&$images)
     {
-        $imgInfo = array();
-        $len = count($images);
-        $wc = ceil(sqrt($len));
-        $hc = floor(sqrt($len / 2));
-        $maxW = array();
-        $maxH = array();
-
-        // TODO: add padding -> $this->getSpacing()
-
-        $i = 0;
-        foreach ($images as &$image) {
-            $imgInfo[$i] = getimagesize($image['file']);
-            $image['width'] = $imgInfo[$i][0];
-            $image['height'] = $imgInfo[$i][1];
-            $found = false;
-            for ($j = 0; $j < $i; $j++) {
-                if ($imgInfo[$maxW[$j]][0] < $imgInfo[$i][0]) {
-                    $farr = $j > 0 ? array_slice($maxW, $j - 1, $i) : array();
-                    $maxW = array_merge($farr, array($i), array_slice($maxW, $j));
-                    $found = true;
-                    break;
-                }
-            }
-
-            if (!$found) {
-                $maxW[$i] = $i;
-            }
-            $found = false;
-            for ($j = 0; $j < $i; $j++) {
-                if ($imgInfo[$maxH[$j]][1] < $imgInfo[$i][1]) {
-                    $farr = $j > 0 ? array_slice($maxH, $j - 1, $i) : array();
-                    $maxH = array_merge($farr, array($i), array_slice($maxH, $j));
-                    $found = true;
-                    break;
-                }
-            }
-            if (!$found) {
-                $maxH[$j] = $j;
-            }
-            $i++;
+        switch($this->getConfigParam('imagePositioning')) {
+            case 'one-column':
+                $positioner = new OneColumnPositioner();
+                break;
         }
 
-        $width = 0;
-        for ($i = 0; $i < $wc; $i++) {
-            $width += $imgInfo[$maxW[$i]][0];
-        }
-
-        $height = 0;
-        for ($i = 0; $i < $hc; $i++) {
-            $height += $imgInfo[$maxH[$i]][1];
-        }
+        $images = $positioner->calculate($images);
+        $width = $positioner->getSpriteImageWidth();
+        $height = $positioner->getSpriteImageHeight();
 
         $im = imagecreatetruecolor($width, $height);
 
+        $wc = ceil(sqrt(count($images)));
         $wCnt = 0;
         $startWFrom = 0;
         $startHFrom = 0;
         $i = 0;
         foreach ($images as &$image) {
-            switch ($imgInfo[$i]['mime']) {
+            switch ($image['mime']) {
                 case "image/gif":
                     $tmp = imagecreatefromgif($image['file']);
                     break;
@@ -230,18 +190,18 @@ class SpriteService
                 $startHFrom,
                 0,
                 0,
-                $imgInfo[$i][0],
-                $imgInfo[$i][1],
-                $imgInfo[$i][0],
-                $imgInfo[$i][1]
+                $image['width'],
+                $image['height'],
+                $image['width'],
+                $image['height']
             );
             $wCnt++;
             if ($wCnt == $wc) {
                 $startWFrom = 0;
-                $startHFrom += $imgInfo[$maxH[0]][1];
+                $startHFrom += $image['height'];
                 $wCnt = 0;
             } else {
-                $startWFrom += $imgInfo[$i][0];
+                $startWFrom += $image['width'];
             }
             $i++;
         }
