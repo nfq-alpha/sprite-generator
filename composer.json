@@ -13,7 +13,7 @@
     ],
     "require": {
         "php": ">=5.3.0",
-        "ext-gd2": "*"
+        "ext-gd": "*"
     },
     "require-dev": {
     },
