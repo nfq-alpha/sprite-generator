@@ -18,11 +18,11 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('nfq_sprite_generator');
+        $rootNode = $treeBuilder->root('sprite_generator');
 
         $rootNode
             ->children()
-                ->arrayNode('sprite')
+                ->arrayNode('sprites')
                     ->useAttributeAsKey('name')
                     ->prototype('array')
                         ->children()

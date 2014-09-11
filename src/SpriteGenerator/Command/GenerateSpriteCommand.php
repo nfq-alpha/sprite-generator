@@ -6,7 +6,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use SpriteGenerator\Exception\SpriteException;
 
 class GenerateSpriteCommand extends ContainerAwareCommand
 {
@@ -18,18 +17,17 @@ class GenerateSpriteCommand extends ContainerAwareCommand
      */
     protected function configure()
     {
- 
+
         $this
             ->setName('nfq:sprite:generate')
             ->setDescription('Generate sprite')
             ->addArgument(
                 'name',
                 InputArgument::OPTIONAL,
-                'You can specify the name of one of your sprites. ' .
-                    'If not set, all the sprites are generated.'
+                'You can specify the name of one of your sprites. If not set, all the sprites are generated.'
             );
     }
- 
+
     /**
      * execute
      *
@@ -45,8 +43,8 @@ class GenerateSpriteCommand extends ContainerAwareCommand
             $output->writeln('<info>Generating your sprites</info>');
             $sprite = $this->getContainer()->get('nfq.sprite');
             $sprite->generateSprite($name);
-         } catch (SpriteException $e) {
-             $output->writeln('<error>' . $e->getMessage() . '</error>');
-         }
+        } catch (Exception $e) {
+            $output->writeln('<error>' . $e->getMessage() . '</error>');
+        }
     }
 }

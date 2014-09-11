@@ -2,34 +2,38 @@
 
 namespace SpriteGenerator\Services;
 
-use SpriteGenerator\Exception\DirectoryException;
 use SpriteGenerator\Exception\SpriteException;
 
 
 /**
- * Sprite generator base class
+ * Sprite generator service
  */
 class SpriteService
 {
+    /**
+     * All sprite configs
+     * @var
+     */
+    private $config = array();
 
-    private $options;
+    /**
+     * Active sprite name
+     * @var string
+     */
+    private $activeSprite = null;
+
     private $cssMap = array();
 
     /**
-     * @var SpriteConfInterface
-     */
-    private $config;
-
-    /*
-     * set config for command line
+     * @param $config array
      */
     public function setConfig($config)
     {
         $this->config = $config;
     }
 
-    /*
-     * get config for command line
+    /**
+     * @return array
      */
     public function getConfig()
     {
@@ -37,105 +41,96 @@ class SpriteService
     }
 
     /**
-     * Sprite List
-     *
+     * @param $name string
+     * @return string
+     * @throws \SpriteGenerator\Exception\SpriteException
      */
-    public function getSpriteList()
+    public function getConfigParam($name)
+    {
+        if (!isset($this->config[$this->activeSprite][$name])) {
+            throw new SpriteException('Sprite config "' . $name . '" is not set.');
+        }
+
+        return $this->config[$this->activeSprite][$name];
+    }
+
+    /**
+     * @param $spriteName
+     */
+    public function setActiveSprite($spriteName)
+    {
+        $this->activeSprite = $spriteName;
+    }
+
+    /**
+     * @param $spriteName string
+     * @return array
+     * @throws \SpriteGenerator\Exception\SpriteException
+     */
+    public function getSpriteList($spriteName)
     {
         $spriteList = $this->getConfig();
         if (empty($spriteList)) {
-            $spriteList = null;
+            throw new SpriteException('No sprite configs found');
         }
-        return $spriteList;
-    }
-
-
-    /**
-     * generate sprite
-     *
-     */
-    public function generateSprite($spriteName = false)
-    {
-        $spriteList = $this->getSpriteList();
 
         if ($spriteName) {
             if (!isset($spriteList[$spriteName])) {
-                throw new DirectoryException('Sprite config for ' . $spriteName . ' not found');
+                throw new SpriteException('Sprite config for ' . $spriteName . ' not found');
             }
 
             $spriteList = array($spriteName => $spriteList[$spriteName]);
         }
 
-        foreach ($spriteList as $spriteInfo) {
+        return $spriteList;
+    }
+
+    /**
+     * @param bool $spriteName
+     * @return bool
+     * @throws \SpriteGenerator\Exception\SpriteException
+     */
+    public function generateSprite($spriteName = false)
+    {
+        $spriteList = $this->getSpriteList($spriteName);
+
+        foreach ($spriteList as $spriteName => $spriteInfo) {
             if (file_exists($spriteInfo['inDir']) === false) {
-                throw new DirectoryException('Image source directory doesn\'t exist');
+                throw new SpriteException('Image source directory doesn\'t exist');
             }
 
             try {
-                $this->setOptions($spriteInfo);
+                $this->setActiveSprite($spriteName);
                 $this->create();
             } catch (SpriteException $de) {
-                throw new SpriteException('Sprite cannot be generate');
+                throw new SpriteException('Sprite "' . $spriteName . '" cannot be generated.');
             }
         }
 
         return true;
     }
 
-    public function setOptions($spriteInfo)
+    /**
+     * @return bool
+     */
+    public function create()
     {
-        $this->options = $spriteInfo;
-    }
+        $images = $this->getSpriteSourceImages();
 
-    public function getOption($name)
-    {
-        if (!isset($this->options[$name])) {
-            throw new SpriteException('Sprite option "' . $name . '" is not set');
-        }
-        return $this->options[$name];
-    }
-
-    public function createSpriteCss()
-    {
-        $spriteImages = $this->getCssMap();
-        $imageHash = substr(md5(serialize($spriteImages)), 10, 20);
-
-        $imageName = $this->getOption('relativeImagePath');
-        $imageName .= basename($this->getOption('outImage'));
-
-        $css = '';
-        $this->addCssLine($css, ".{$this->getOption('spriteClass')} {");
-        $this->addCssLine($css, "\tbackground: url({$imageName}?{$imageHash}) no-repeat;");
-        $this->addCssLine($css, "}");
-        $this->addCssLine($css, "");
-
-        foreach ($spriteImages as $key => $image) {
-            $this->addCssLine($css, ".{$key} {");
-
-            $this->addCssLine($css, "\twidth: {$image['width']}px;");
-            $this->addCssLine($css, "\theight: {$image['height']}px;");
-
-            $this->addCssLine($css, "\tbackground-position: -{$image['pos_x']}px -{$image['pos_y']}px;");
-            $this->addCssLine($css, "}");
-
-            $this->addCssLine($css, "");
-        }
-
-        // TODO: check if saving worked
-        file_put_contents($this->getOption('outCss'), $css);
+        $this->createSpriteImage($images);
+        $this->createSpriteCss($images);
 
         return true;
     }
 
-    public function addCssLine(&$wholeCss, $addCss)
+    /**
+     * @return array
+     */
+    public function getSpriteSourceImages()
     {
-        $wholeCss = $wholeCss . "$addCss\r\n";
-    }
-
-    public function create()
-    {
-        $sourceDir = $this->getOption('inDir');
+        $sourceDir = $this->getConfigParam('inDir');
         $dh = opendir($sourceDir);
+
         $images = array();
         while (false !== ($filename = readdir($dh))) {
             if (!is_file($sourceDir . $filename)) {
@@ -145,24 +140,17 @@ class SpriteService
             $images[$fileCode]['file'] = $sourceDir . $filename;
         }
 
-        $this->createSpriteImage($images);
-        $this->createSpriteCss();
-
-        return true;
+        return $images;
     }
 
-
-    public function createSpriteImage($images)
+    /**
+     * @param $images
+     * @throws \SpriteGenerator\Exception\SpriteException
+     * @return bool
+     * @TODO: split to: image position getters, generators configurable with config
+     */
+    public function createSpriteImage(&$images)
     {
-        $images = $this->mergeImages($images);
-        $this->setCssMap($images);
-    }
-
-
-    public function mergeImages($images)
-    {
-        // $this->getSpacing()
-
         $imgInfo = array();
         $len = count($images);
         $wc = ceil(sqrt($len));
@@ -170,7 +158,7 @@ class SpriteService
         $maxW = array();
         $maxH = array();
 
-        // TODO: padding
+        // TODO: add padding -> $this->getSpacing()
 
         $i = 0;
         foreach ($images as &$image) {
@@ -215,8 +203,6 @@ class SpriteService
             $height += $imgInfo[$maxH[$i]][1];
         }
 
-//        echo __FILE__.': '.__LINE__.'<pre>';var_dump($wc, $hc, $width, $height, $maxW, $maxH);echo '</pre>'; // TODO: REMOVE
-//        exit;
         $im = imagecreatetruecolor($width, $height);
 
         $wCnt = 0;
@@ -264,20 +250,54 @@ class SpriteService
         }
 
         // TODO: check if saving worked
-        imagepng($im, $this->getOption('outImage'));
+        imagepng($im, $this->getConfigParam('outImage'));
 
-        return $images;
+        return true;
     }
 
-    public function setCssMap($v)
+    /**
+     * @param $images
+     * @return bool
+     * @TODO: file formatter done with twig configurable with config
+     */
+    public function createSpriteCss($images)
     {
-        $this->cssMap = $v;
-        return $this;
+        $imageHash = substr(md5(serialize($images)), 10, 20);
+
+        $imageName = $this->getConfigParam('relativeImagePath');
+        $imageName .= basename($this->getConfigParam('outImage'));
+
+        $css = '';
+        $this->addCssLine($css, ".{$this->getConfigParam('spriteClass')} {");
+        $this->addCssLine($css, "\tbackground: url({$imageName}?{$imageHash}) no-repeat;");
+        $this->addCssLine($css, "}");
+        $this->addCssLine($css, "");
+
+        foreach ($images as $key => $image) {
+            $this->addCssLine($css, ".{$key} {");
+
+            $this->addCssLine($css, "\twidth: {$image['width']}px;");
+            $this->addCssLine($css, "\theight: {$image['height']}px;");
+
+            $this->addCssLine($css, "\tbackground-position: -{$image['pos_x']}px -{$image['pos_y']}px;");
+            $this->addCssLine($css, "}");
+
+            $this->addCssLine($css, "");
+        }
+
+        // TODO: check if saving worked
+        file_put_contents($this->getConfigParam('outCss'), $css);
+
+        return true;
     }
 
-    public function getCssMap()
+    /**
+     * @param $wholeCss string
+     * @param $addCss string
+     */
+    public function addCssLine(&$wholeCss, $addCss)
     {
-        return $this->cssMap;
+        $wholeCss = $wholeCss . "$addCss\r\n";
     }
 }
 

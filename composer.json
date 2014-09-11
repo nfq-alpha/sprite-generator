@@ -1,17 +1,19 @@
 {
     "name": "nfq-alpha/sprite-bundle",
-    "description": "Generate sprite with basic PHP",
-    "keywords": ["sprite"],
+    "description": "Generate sprite images and stylesheets with plain PHP and GD2 (no 3rd party dependencies)",
+    "keywords": ["sprite", "sprites"],
     "type": "library",
     "license": "MIT",
     "authors": [
         {
             "name": "Kazimieras Butkus",
-            "email": "kazimieras@nfq.lt"
+            "email": "kazimieras@nfq.lt",
+            "role": "Developer"
         }
     ],
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=5.3.0",
+        "ext-gd2": "*"
     },
     "require-dev": {
     },

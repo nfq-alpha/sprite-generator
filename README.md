@@ -1,10 +1,13 @@
 Nfq Sprite Generator Bundle
 ==================
-Easily generate sprites in your Symfony2 environment without any dependencies
+Generate sprite images and stylesheets with plain PHP and GD2 (no 3rd party dependencies)
 
 
 ## Installation
 ### Dependancies
+
+PHP extension GD2
+
 
 ### Get the bundle
 
@@ -13,7 +16,7 @@ Add this in your composer.json
 ```json
 {
 	"require": {
-		"nfq-alpha/sprite-generator": "dev-master@dev"
+		"nfq-alpha/sprite-bundle": "dev-master@dev"
 	}
 }
 ```
@@ -30,12 +33,11 @@ new SpriteGenerator\SpriteGeneratorBundle(),
 ```
 
 ### Configuration
-You have to configure your sprite by puting the following lines in your ```config.yml``` file: 
+You have to configure your sprites by adding lines to ```config.yml```:
 
-Minimal configuration:
 ```yaml
-nfq_sprite_generator:
-    sprite:
+sprite_generator:
+    sprites:
         spritename:
             inDir: %kernel.root_dir%/../src/Resources/public/img/sprites/
             outImage: %kernel.root_dir%/../src/Resources/public/img/sprite2.png
@@ -61,18 +63,4 @@ $ php app/console nfq:sprite:generate
 Generate one sprite : 
 ```sh
 $ php app/console nfq:sprite:generate spritename
-```
-
-## Use in your templates
-You have now to integrade your generated files in your templates.
-Example : 
-```twig
-{% block stylesheets %}
-    {% stylesheets
-        "img/sprite/*.css"
-        output="css/sprite.css"
-    %}
-        <link rel="stylesheet" type="text/css" href="{{ asset_url }}" />
-    {% endstylesheets %}
-{% endblock %}
 ```
