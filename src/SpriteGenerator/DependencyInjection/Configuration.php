@@ -17,7 +17,7 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        // TODO: check getConfigTreeBuilder works and fix it - it's not executed now...
+        // TODO: how to set default values so that we wouldn't have to do it in all configs
 
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('sprite_generator');
@@ -39,6 +39,9 @@ class Configuration implements ConfigurationInterface
                             ->end()
                             ->scalarNode('imagePositioning')
                                 ->defaultValue('one-column')
+                            ->end()
+                            ->scalarNode('imageGenerator')
+                                ->defaultValue('gd2')
                             ->end()
                         ->end()
                     ->end()

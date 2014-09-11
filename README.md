@@ -47,6 +47,7 @@ sprite_generator:
             spriteClass: sprite
             cssFormat: sass
             imagePositioning: one-column
+            imageGenerator: gd2
         another_spritename:
             inDir: %kernel.root_dir%/../src/Resources/public/img/sprites/
             outImage: %kernel.root_dir%/../src/Resources/public/img/sprite2.png
@@ -56,6 +57,7 @@ sprite_generator:
             spriteClass: sprite_another
             cssFormat: sass
             imagePositioning: one-column
+            imageGenerator: gd2
 ```
 
 ## Generate sprites

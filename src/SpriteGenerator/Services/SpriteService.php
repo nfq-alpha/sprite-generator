@@ -5,10 +5,14 @@ namespace SpriteGenerator\Services;
 use SpriteGenerator\Exception\SpriteException;
 use SpriteGenerator\Formatter\SassFormatter;
 use SpriteGenerator\Positioner\OneColumnPositioner;
+use SpriteGenerator\Positioner\MinImageSizePositioner;
+use SpriteGenerator\ImageGenerator\Gd2Generator;
 
 
 /**
  * Sprite generator service
+ *
+ * @TODO: check if method visibility is correct
  */
 class SpriteService
 {
@@ -23,8 +27,6 @@ class SpriteService
      * @var string
      */
     private $activeSprite = null;
-
-    private $cssMap = array();
 
     /**
      * @param $config array
@@ -69,7 +71,7 @@ class SpriteService
      * @return array
      * @throws \SpriteGenerator\Exception\SpriteException
      */
-    public function getSpriteList($spriteName)
+    protected function getSpriteList($spriteName)
     {
         $spriteList = $this->getConfig();
         if (empty($spriteList)) {
@@ -111,7 +113,7 @@ class SpriteService
     /**
      * @return bool
      */
-    public function create()
+    protected function create()
     {
         $images = $this->getSpriteSourceImages();
 
@@ -124,7 +126,7 @@ class SpriteService
     /**
      * @return array
      */
-    public function getSpriteSourceImages()
+    protected function getSpriteSourceImages()
     {
         $sourceDir = $this->getConfigParam('inDir');
         $dh = opendir($sourceDir);
@@ -145,79 +147,61 @@ class SpriteService
      * @param $images
      * @throws \SpriteGenerator\Exception\SpriteException
      * @return bool
+     *
      * @TODO: split to: image position getters, generators configurable with config
      */
-    public function createSpriteImage(&$images)
+    protected function createSpriteImage(&$images)
+    {
+        $padding = $this->getConfigParam('padding');
+        $resultImage = $this->getConfigParam('outImage');
+
+        $positioner = $this->getSpritePositioner();
+        $generator = $this->getImageGenerator();
+
+        $images = $positioner->calculate($images, $padding);
+        return $generator->generate($images, $resultImage, $positioner);
+    }
+
+    /**
+     * @return SpritePositionerInterface
+     */
+    protected function getSpritePositioner()
     {
         switch ($this->getConfigParam('imagePositioning')) {
             case 'one-column':
                 $positioner = new OneColumnPositioner();
                 break;
+            case 'min-image':
+                $positioner = new MinImageSizePositioner();
+                break;
         }
 
-        $padding = $this->getConfigParam('padding');
+        return $positioner;
+    }
 
-        $images = $positioner->calculate($images, $padding);
-        $width = $positioner->getSpriteImageWidth();
-        $height = $positioner->getSpriteImageHeight();
-
-        $im = imagecreatetruecolor($width, $height);
-
-        foreach ($images as &$image) {
-            switch ($image['mime']) {
-                case "image/gif":
-                    $tmp = imagecreatefromgif($image['file']);
-                    break;
-                case "image/jpeg":
-                    $tmp = imagecreatefromjpeg($image['file']);
-                    break;
-                case "image/png":
-                    $tmp = imagecreatefrompng($image['file']);
-                    break;
-                case "image/bmp":
-                    throw new SpriteException('BMP format is not supported');
-                    break;
-            }
-
-            imagecopyresampled(
-                $im,
-                $tmp,
-                $image['pos_x'],
-                $image['pos_y'],
-                0,
-                0,
-                $image['width'],
-                $image['height'],
-                $image['width'],
-                $image['height']
-            );
+    /**
+     * @return ImageGeneratorInterface
+     */
+    protected function getImageGenerator()
+    {
+        switch ($this->getConfigParam('imageGenerator')) {
+            case 'gd2':
+                $generator = new Gd2Generator();
+                break;
         }
 
-        // TODO: check if saving worked
-        imagepng($im, $this->getConfigParam('outImage'));
-
-        return true;
+        return $generator;
     }
 
     /**
      * @param $images
      * @return bool
      */
-    public function createSpriteCss($images)
+    protected function createSpriteCss($images)
     {
+        $formatter = $this->getCssFormatter();
         $spriteClass = $this->getConfigParam('spriteClass');
-
-        $imageHash = substr(md5(serialize($images)), 10, 20);
-
-        $spriteImageName = $this->getConfigParam('relativeImagePath');
-        $spriteImageName .= basename($this->getConfigParam('outImage'));
-        $spriteImageName .= '?' . $imageHash;
-
-        switch ($this->getConfigParam('cssFormat')) {
-            case 'sass':
-                $formatter = new SassFormatter();
-                break;
-        }
+        $spriteImageName = $this->getRelativeSpriteImageUrl($images);
         $formattedCss = $formatter->format($images, $spriteClass, $spriteImageName);
 
         // TODO: check if saving worked
@@ -225,80 +209,33 @@ class SpriteService
 
         return true;
     }
+
+    /**
+     * @param $images
+     * @return string
+     */
+    protected function getRelativeSpriteImageUrl($images)
+    {
+        $imageHash = substr(md5(serialize($images)), 10, 20);
+
+        $spriteImageName = $this->getConfigParam('relativeImagePath');
+        $spriteImageName .= basename($this->getConfigParam('outImage'));
+        $spriteImageName .= '?' . $imageHash;
+
+        return $spriteImageName;
+    }
+
+    /**
+     * @return CssFormatterInterface
+     */
+    protected function getCssFormatter()
+    {
+        switch ($this->getConfigParam('cssFormat')) {
+            case 'sass':
+                $formatter = new SassFormatter();
+                break;
+        }
+
+        return $formatter;
+    }
 }
-
-
-
-
-
-
-
-
-
-/*
-function mergeImages($images) {
-    $imageData = array();
-    $len = count($images);
-    $wc = ceil(sqrt($len));
-    $hc = floor(sqrt($len/2));
-    $maxW = array();
-    $maxH = array();
-    for($i = 0; $i < $len; $i++) {
-        $imageData[$i] = getimagesize($images[$i]);
-        $found = false;
-        for($j = 0; $j < $i; $j++) {
-            if ( $imageData[$maxW[$j]][0] < $imageData[$i][0] ) {
-                $farr = $j > 0 ? array_slice($maxW, $j-1, $i) : array();
-                $maxW = array_merge($farr, array($i), array_slice($maxW, $j));
-                $found = true;
-                break;
-            }
-        }
-        if ( !$found ) {
-            $maxW[$i] = $i;
-        }
-        $found = false;
-        for($j = 0; $j < $i; $j++) {
-            if ( $imageData[$maxH[$j]][1] < $imageData[$i][1] ) {
-                $farr = $j > 0 ? array_slice($maxH, $j-1, $i) : array();
-                $maxH = array_merge($farr, array($i), array_slice($maxH, $j));
-                $found = true;
-                break;
-            }
-        }
-        if ( !$found ) {
-            $maxH[$i] = $i;
-        }
-    }
-
-    $width = 0;
-    for($i = 0; $i < $wc; $i++) {
-        $width += $imageData[$maxW[$i]][0];
-    }
-
-    $height = 0;
-    for($i = 0; $i < $hc; $i++) {
-        $height += $imageData[$maxH[$i]][1];
-    }
-
-    $im = imagecreatetruecolor($width, $height);
-
-    $wCnt = 0;
-    $startWFrom = 0;
-    $startHFrom = 0;
-    for( $i = 0; $i < $len; $i++ ) {
-        $tmp = imagecreatefromjpeg($images[$i]);
-        imagecopyresampled($im, $tmp, $startWFrom, $startHFrom, 0, 0, $imageData[$i][0], $imageData[$i][1], $imageData[$i][0], $imageData[$i][1]);
-        $wCnt++;
-        if ( $wCnt == $wc ) {
-            $startWFrom = 0;
-            $startHFrom += $imageData[$maxH[0]][1];
-            $wCnt = 0;
-        } else {
-            $startWFrom += $imageData[$i][0];
-        }
-    }
-
-
-    return $im;
-}*/
