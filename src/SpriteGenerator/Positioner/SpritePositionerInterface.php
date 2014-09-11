@@ -8,9 +8,10 @@ interface SpritePositionerInterface
      * Calculate image positions in image image
      *
      * @param array $sourceImages
+     * @param int $padding
      * @return array
      */
-    public function calculate(array $sourceImages);
+    public function calculate(array $sourceImages, $padding);
 
     /**
      * Get result image width

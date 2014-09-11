@@ -149,23 +149,20 @@ class SpriteService
      */
     public function createSpriteImage(&$images)
     {
-        switch($this->getConfigParam('imagePositioning')) {
+        switch ($this->getConfigParam('imagePositioning')) {
             case 'one-column':
                 $positioner = new OneColumnPositioner();
                 break;
         }
 
-        $images = $positioner->calculate($images);
+        $padding = $this->getConfigParam('padding');
+
+        $images = $positioner->calculate($images, $padding);
         $width = $positioner->getSpriteImageWidth();
         $height = $positioner->getSpriteImageHeight();
 
         $im = imagecreatetruecolor($width, $height);
 
-        $wc = ceil(sqrt(count($images)));
-        $wCnt = 0;
-        $startWFrom = 0;
-        $startHFrom = 0;
-        $i = 0;
         foreach ($images as &$image) {
             switch ($image['mime']) {
                 case "image/gif":
@@ -181,13 +178,12 @@ class SpriteService
                     throw new SpriteException('BMP format is not supported');
                     break;
             }
-            $image['pos_x'] = $startWFrom;
-            $image['pos_y'] = $startHFrom;
+
             imagecopyresampled(
                 $im,
                 $tmp,
-                $startWFrom,
-                $startHFrom,
+                $image['pos_x'],
+                $image['pos_y'],
                 0,
                 0,
                 $image['width'],
@@ -195,15 +191,6 @@ class SpriteService
                 $image['width'],
                 $image['height']
             );
-            $wCnt++;
-            if ($wCnt == $wc) {
-                $startWFrom = 0;
-                $startHFrom += $image['height'];
-                $wCnt = 0;
-            } else {
-                $startWFrom += $image['width'];
-            }
-            $i++;
         }
 
         // TODO: check if saving worked
@@ -226,7 +213,7 @@ class SpriteService
         $spriteImageName .= basename($this->getConfigParam('outImage'));
         $spriteImageName .= '?' . $imageHash;
 
-        switch($this->getConfigParam('cssFormat')) {
+        switch ($this->getConfigParam('cssFormat')) {
             case 'sass':
                 $formatter = new SassFormatter();
                 break;

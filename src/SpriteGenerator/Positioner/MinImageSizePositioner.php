@@ -16,9 +16,10 @@ class MinImageSizePositioner implements SpritePositionerInterface
 
     /**
      * @param array $sourceImages
+     * @param int $padding
      * @return array
      */
-    public function calculate(array $sourceImages)
+    public function calculate(array $sourceImages, $padding)
     {
         $imgInfo = array();
         $len = count($sourceImages);
@@ -74,6 +75,25 @@ class MinImageSizePositioner implements SpritePositionerInterface
             $height += $imgInfo[$maxH[$i]][1];
         }
         $this->spriteHeight = $height;
+
+        $wCnt = 0;
+        $startWFrom = 0;
+        $startHFrom = 0;
+        $i = 0;
+        foreach ($sourceImages as &$image) {
+            $image['pos_x'] = $startWFrom;
+            $image['pos_y'] = $startHFrom;
+
+            $wCnt++;
+            if ($wCnt == $wc) {
+                $startWFrom = 0;
+                $startHFrom += $image['height'];
+                $wCnt = 0;
+            } else {
+                $startWFrom += $image['width'];
+            }
+            $i++;
+        }
 
         return $sourceImages;
     }
