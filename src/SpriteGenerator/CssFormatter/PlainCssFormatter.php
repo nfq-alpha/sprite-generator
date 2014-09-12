@@ -1,8 +1,8 @@
 <?php
 
-namespace SpriteGenerator\Formatter;
+namespace SpriteGenerator\CssFormatter;
 
-class SassFormatter implements CssFormatterInterface
+class PlainCssFormatter implements CssFormatterInterface
 {
     /**
      * @param array $sourceImages
