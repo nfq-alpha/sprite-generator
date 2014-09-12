@@ -42,7 +42,12 @@ class GenerateSpriteCommand extends ContainerAwareCommand
             $name = $input->getArgument('name');
             $output->writeln('<info>Generating your sprites</info>');
             $sprite = $this->getContainer()->get('nfq.sprite');
-            $sprite->generateSprite($name);
+            $success = $sprite->generateSprite($name);
+
+            if ($success) {
+                $output->writeln('<info>Done</info>');
+            }
+
         } catch (Exception $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
         }
