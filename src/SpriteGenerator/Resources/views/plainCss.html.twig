@@ -1,0 +1,12 @@
+
+.{{ spriteClass }} {
+    background: url({{ spriteImageName }}) no-repeat;
+}
+
+{% for key, image in images %}
+.{{ key }} {
+    width: {{ image.width }}px;
+    height: {{ image.height }}px;
+    background-position: -{{ image.pos_x }}px -{{ image.pos_y }}px;
+}
+{% endfor %}
