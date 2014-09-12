@@ -3,7 +3,7 @@
 namespace SpriteGenerator\Services;
 
 use SpriteGenerator\Exception\SpriteException;
-use SpriteGenerator\CssFormatter\CssFormatter;
+use SpriteGenerator\CssFormatter\PlainCssFormatter;
 use SpriteGenerator\CssFormatter\SassFormatter;
 use SpriteGenerator\Positioner\OneColumnPositioner;
 use SpriteGenerator\Positioner\MinImageSizePositioner;
