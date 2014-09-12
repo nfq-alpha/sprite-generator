@@ -1,7 +1,7 @@
 {
     "name": "nfq-alpha/sprite-bundle",
-    "description": "Generate sprite images and stylesheets with plain PHP and GD2 (no 3rd party dependencies)",
-    "keywords": ["sprite", "sprites"],
+    "description": "Generate sprites with PHP and twig templates",
+    "keywords": ["sprite"],
     "type": "library",
     "license": "MIT",
     "authors": [
