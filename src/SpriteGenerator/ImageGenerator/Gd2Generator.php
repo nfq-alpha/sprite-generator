@@ -24,6 +24,10 @@ class Gd2Generator implements ImageGeneratorInterface
 
         $im = imagecreatetruecolor($width, $height);
 
+        // add transparent background
+        $black = imagecolorallocate($im, 0, 0, 0);
+        imagecolortransparent($im, $black);
+
         foreach ($sourceImages as &$image) {
             switch ($image['mime']) {
                 case "image/gif":
