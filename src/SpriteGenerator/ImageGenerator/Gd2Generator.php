@@ -13,36 +13,18 @@ class Gd2Generator implements ImageGeneratorInterface
      * @param SpritePositionerInterface $positioner
      * @throws \SpriteGenerator\Exception\SpriteException
      * @return string
-     *
-     * @TODO: move formatting to twig template
      */
     public function generate(array $sourceImages, $resultImage, SpritePositionerInterface $positioner)
     {
-
         $width = $positioner->getSpriteImageWidth();
         $height = $positioner->getSpriteImageHeight();
 
         $im = imagecreatetruecolor($width, $height);
 
-        // add transparency
-        imagealphablending($im, false);
-        imagesavealpha($im, true);
+        $im = $this->addTransparencyToImage($im);
 
         foreach ($sourceImages as &$image) {
-            switch ($image['mime']) {
-                case "image/gif":
-                    $tmp = imagecreatefromgif($image['file']);
-                    break;
-                case "image/jpeg":
-                    $tmp = imagecreatefromjpeg($image['file']);
-                    break;
-                case "image/png":
-                    $tmp = imagecreatefrompng($image['file']);
-                    break;
-                case "image/bmp":
-                    throw new SpriteException('BMP format is not supported');
-                    break;
-            }
+            $tmp = $this->createImageFromFile($image);
 
             imagecopyresampled(
                 $im,
@@ -58,9 +40,79 @@ class Gd2Generator implements ImageGeneratorInterface
             );
         }
 
-        $saved = imagepng($im, $resultImage);
+        return $this->saveResultImage($im, $resultImage);
+    }
+
+    /**
+     * Add transparency & transparent background
+     *
+     * @param $im
+     * @return mixed
+     */
+    private function addTransparencyToImage($im)
+    {
+        imagealphablending($im, false);
+        $transparency = imagecolorallocatealpha($im, 0, 0, 0, 127);
+        imagefill($im, 0, 0, $transparency);
+        imagesavealpha($im, true);
+
+        return $im;
+    }
+
+    /**
+     * @param $image
+     * @return resource
+     * @throws \SpriteGenerator\Exception\SpriteException
+     */
+    private function createImageFromFile($image)
+    {
+        $file = $image['file'];
+        $format = $image['mime'];
+
+        switch ($format) {
+            case "image/gif":
+                $tmp = imagecreatefromgif($file);
+                break;
+            case "image/jpeg":
+                $tmp = imagecreatefromjpeg($file);
+                break;
+            case "image/png":
+                $tmp = imagecreatefrompng($file);
+                break;
+            default:
+                throw new SpriteException('Image format "' . $format . '" (file "' . $file . '") is not supported.');
+        }
+
+        return $tmp;
+    }
+
+    /**
+     * @param $im
+     * @param $resultImage
+     * @return bool
+     * @throws \SpriteGenerator\Exception\SpriteException
+     */
+    private function saveResultImage($im, $resultImage)
+    {
+        $format = pathinfo($resultImage, PATHINFO_EXTENSION);
+
+        switch ($format) {
+            case "gif":
+                $saved = imagegif($im, $resultImage);
+                break;
+            case "jpg":
+            case "jpeg":
+                $saved = imagejpeg($im, $resultImage, 89);
+                break;
+            case "png":
+                $saved = imagepng($im, $resultImage);
+                break;
+            default:
+                throw new SpriteException('Result image format "' . $format . '" is not supported.');
+        }
+
         if ($saved === false) {
-            throw new SpriteException('Saving image failed. Maybe "'.$resultImage.'" does not have write permissions?');
+            throw new SpriteException('Saving image failed. Maybe "' . $resultImage . '" does not have write permissions?');
         }
 
         return true;

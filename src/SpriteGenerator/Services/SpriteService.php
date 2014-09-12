@@ -3,7 +3,8 @@
 namespace SpriteGenerator\Services;
 
 use SpriteGenerator\Exception\SpriteException;
-use SpriteGenerator\Formatter\SassFormatter;
+use SpriteGenerator\CssFormatter\PlainCssFormatter;
+use SpriteGenerator\CssFormatter\SassFormatter;
 use SpriteGenerator\Positioner\OneColumnPositioner;
 use SpriteGenerator\Positioner\MinImageSizePositioner;
 use SpriteGenerator\ImageGenerator\Gd2Generator;
@@ -234,6 +235,9 @@ class SpriteService
     protected function getCssFormatter()
     {
         switch ($this->getConfigParam('cssFormat')) {
+            case 'css':
+                $formatter = new PlainCssFormatter();
+                break;
             case 'sass':
                 $formatter = new SassFormatter();
                 break;

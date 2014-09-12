@@ -1,6 +1,6 @@
 <?php
 
-namespace SpriteGenerator\Formatter;
+namespace SpriteGenerator\CssFormatter;
 
 interface CssFormatterInterface
 {
