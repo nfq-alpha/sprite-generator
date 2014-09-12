@@ -24,6 +24,8 @@ class OneColumnPositioner implements SpritePositionerInterface
         $width = $height = 0;
 
         foreach ($sourceImages as &$image) {
+            $image['filesize'] = filesize($image['file']);
+
             $imgInfo = getimagesize($image['file']);
 
             $image['width'] = $imgInfo[0];
