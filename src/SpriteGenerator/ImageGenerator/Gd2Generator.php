@@ -54,8 +54,10 @@ class Gd2Generator implements ImageGeneratorInterface
             );
         }
 
-        // TODO: check if saving worked
-        imagepng($im, $resultImage);
+        $saved = imagepng($im, $resultImage);
+        if ($saved === false) {
+            throw new SpriteException('Saving image failed. Maybe "'.$resultImage.'" does not have write permissions?');
+        }
 
         return true;
     }

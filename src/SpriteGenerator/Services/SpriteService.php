@@ -147,8 +147,6 @@ class SpriteService
      * @param $images
      * @throws \SpriteGenerator\Exception\SpriteException
      * @return bool
-     *
-     * @TODO: split to: image position getters, generators configurable with config
      */
     protected function createSpriteImage(&$images)
     {
@@ -195,6 +193,7 @@ class SpriteService
 
     /**
      * @param $images
+     * @throws \SpriteGenerator\Exception\SpriteException
      * @return bool
      */
     protected function createSpriteCss($images)
@@ -204,8 +203,12 @@ class SpriteService
         $spriteImageName = $this->getRelativeSpriteImageUrl($images);
         $formattedCss = $formatter->format($images, $spriteClass, $spriteImageName);
 
-        // TODO: check if saving worked
-        file_put_contents($this->getConfigParam('outCss'), $formattedCss);
+        $resultCss = $this->getConfigParam('outCss');
+
+        $saved = file_put_contents($resultCss, $formattedCss);
+        if ($saved === false) {
+            throw new SpriteException('Saving CSS failed. Maybe "'.$resultCss.'" does not have write permissions?');
+        }
 
         return true;
     }
