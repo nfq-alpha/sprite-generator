@@ -141,6 +141,8 @@ class SpriteService
             $images[$fileCode]['file'] = $sourceDir . $filename;
         }
 
+        asort($images);
+
         return $images;
     }
 
