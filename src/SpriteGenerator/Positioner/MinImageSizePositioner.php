@@ -24,7 +24,7 @@ class MinImageSizePositioner implements SpritePositionerInterface
         $imgInfo = array();
         $len = count($sourceImages);
         $wc = ceil(sqrt($len));
-        $hc = floor(sqrt($len / 2));
+        $hc = ceil(sqrt($len));
         $maxW = array();
         $maxH = array();
 
