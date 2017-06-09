@@ -3,4 +3,4 @@ parameters:
 
 services:
     nfq.sprite:
-        class: %sprite.class%
+        class: "%sprite.class%"
