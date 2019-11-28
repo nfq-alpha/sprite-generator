@@ -1,6 +1,11 @@
 parameters:
     sprite.class: SpriteGenerator\Services\SpriteService
+    spriteCommand.class: SpriteGenerator\Command\GenerateSpriteCommand
 
 services:
     nfq.sprite:
-        class: %sprite.class%
+        class: "%sprite.class%"
+    nfq.sprite.command:
+        class: "%spriteCommand.class%"
+        arguments: ["@nfq.sprite"]
+        tags: ["console.command"]

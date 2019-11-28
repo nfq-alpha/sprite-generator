@@ -1,14 +1,22 @@
 <?php
 namespace SpriteGenerator\Command;
 
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use SpriteGenerator\Services\SpriteService;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class GenerateSpriteCommand extends ContainerAwareCommand
+class GenerateSpriteCommand extends Command
 {
+    private $spriteService;
+
+    public function __construct(SpriteService $spriteService)
+    {
+        parent::__construct();
+        $this->spriteService = $spriteService;
+    }
+
     /**
      * configure
      *
@@ -17,7 +25,6 @@ class GenerateSpriteCommand extends ContainerAwareCommand
      */
     protected function configure()
     {
-
         $this
             ->setName('nfq:sprite:generate')
             ->setDescription('Generate sprite')
@@ -41,8 +48,7 @@ class GenerateSpriteCommand extends ContainerAwareCommand
         try {
             $name = $input->getArgument('name');
             $output->writeln('<info>Generating your sprites</info>');
-            $sprite = $this->getContainer()->get('nfq.sprite');
-            $success = $sprite->generateSprite($name);
+            $success = $this->spriteService->generateSprite($name);
 
             if ($success) {
                 $output->writeln('<info>Done</info>');
