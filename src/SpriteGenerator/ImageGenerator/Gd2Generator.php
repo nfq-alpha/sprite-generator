@@ -105,7 +105,7 @@ class Gd2Generator implements ImageGeneratorInterface
                 $saved = imagejpeg($im, $resultImage, 89);
                 break;
             case "png":
-                $saved = imagepng($im, $resultImage);
+                $saved = imagepng($im, $resultImage, 9);
                 break;
             default:
                 throw new SpriteException('Result image format "' . $format . '" is not supported.');
